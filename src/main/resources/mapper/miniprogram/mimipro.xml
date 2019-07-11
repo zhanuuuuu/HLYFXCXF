@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hlyfxcx.dao.miniprogram.mimiDao">
+
+    <select id="getMoneycard_Cust_Log" resultType="com.hlyfxcx.domin.Moneycard_Cust_Log">
+        <![CDATA[
+        		{call p_getMoneycard_Cust_Log_z(
+        					#{cMoneyNo,mode=IN,jdbcType=VARCHAR}
+        					)
+        		}
+    	]]>
+    </select>
+
+    <select id="getMoneyCard_history" resultType="com.hlyfxcx.domin.MoneyCard_history">
+        <![CDATA[
+        		{call p_getMoneyCard_history_z(
+        					#{cardno,mode=IN,jdbcType=VARCHAR})
+        		}
+    	]]>
+    </select>
+
+    <select id="getVipMessage" resultType="com.hlyfxcx.domin.VipMessage" parameterType="java.lang.String">
+        <![CDATA[
+        SELECT  cVipno,cVipName=ISNULL(cVipName,''),cSex=ISNULL(cSex,''),ISNULL(fCurValue_Online,0) AS fCurValue_Online,
+                 dBirthday=ISNULL(dBirthday,''),dValidStart,dValidEnd,cTel=ISNULL(A.cTel,''),
+			     fCurValue=ISNULL(fCurValue,0),cStoreNo=ISNULL(a.cStoreNo,''),dCreadDate,
+			     cStoreName=ISNULL(B.cStoreName,0),A.cHome,A.addressProvinceCity,A.WX_OpendId_XCX FROM t_Vip A
+        LEFT JOIN t_Store B ON A.cStoreNo=B.cStoreNo
+        WHERE cVipno=#{cVipno,jdbcType=VARCHAR}
+        ]]>
+    </select>
+    <!--会员绑定-->
+    <select id="getVipMessageB" resultType="com.hlyfxcx.domin.VipMessage" parameterType="java.lang.String">
+        <![CDATA[
+        SELECT  cVipno,cVipName=ISNULL(cVipName,''),cSex=ISNULL(cSex,''),ISNULL(fCurValue_Online,0) AS fCurValue_Online,
+                 dBirthday=ISNULL(dBirthday,''),dValidStart,dValidEnd,cTel=ISNULL(A.cTel,''),
+			     fCurValue=ISNULL(fCurValue,0),cStoreNo=ISNULL(a.cStoreNo,''),dCreadDate,
+			     cStoreName=ISNULL(B.cStoreName,0),A.cHome,A.addressProvinceCity,A.WX_OpendId_XCX FROM t_Vip A
+        LEFT JOIN t_Store B ON A.cStoreNo=B.cStoreNo
+        WHERE cVipno=#{cVipno,jdbcType=VARCHAR} AND ISNULL(WX_OpendId_XCX,'')<>''
+        ]]>
+    </select>
+
+    <select id="getVipSaleMain" resultType="com.hlyfxcx.domin.t_SaleSheetDetail" parameterType="java.lang.String">
+        <![CDATA[
+
+        SELECT  A.cStoreNo,B.cStoreName, cSaleSheetno, dSaleDate,  cVipNo,SUM(fLastSettle) AS fLastSettle,ISNULL(fVipScore_cur,0.0) AS  fVipScore_cur  FROM t_SaleSheetDetail   A
+        INNER JOIN t_Store B
+        ON  dSaleDate  BETWEEN #{btDate,jdbcType=VARCHAR} AND #{edDate,jdbcType=VARCHAR}
+                      AND ISNULL(cVipNo,'')=#{cVipno,jdbcType=VARCHAR} AND A.cStoreNo=B.cStoreNo
+        GROUP BY A.cStoreNo,B.cStoreName,cSaleSheetno, dSaleDate, cVipNo,fVipScore_cur ORDER BY cSaleSheetno DESC
+
+        ]]>
+    </select>
+
+    <select id="getVipSaleDetail" resultType="com.hlyfxcx.domin.t_SaleSheetDetail_Two" parameterType="java.lang.String">
+        <![CDATA[
+        SELECT dSaleDate,cSaleSheetno,cGoodsNo,cGoodsName,fVipPrice,fLastSettle,fQuantity FROM t_SaleSheetDetail
+        WHERE dSaleDate=#{saleDate,jdbcType=VARCHAR} AND  cSaleSheetno=#{cSaleSheetno,jdbcType=VARCHAR} AND cStoreNo=#{cStoreNo,jdbcType=VARCHAR}
+
+        ]]>
+    </select>
+
+    <insert id="registerVip" parameterType="com.hlyfxcx.domin.VipMessage" >
+        <![CDATA[
+        INSERT INTO t_vip (cVipno,cVipName,cTel,dValidStart,dValidEnd,cSex,fcurvalue,WX_OpendId_XCX,bVipPrice)
+			 VALUES (#{vipMessage.cVipno},#{vipMessage.cVipName},#{vipMessage.cTel},
+			         #{vipMessage.dValidStart},#{vipMessage.dValidEnd},#{vipMessage.cSex},0,#{vipMessage.WX_OpendId_XCX},1)
+	    ]]>
+    </insert>
+
+    <insert id="registerVipB" parameterType="com.hlyfxcx.domin.VipMessage" >
+        <![CDATA[
+        INSERT INTO t_vip (cVipno,cVipName,cTel,dValidStart,dValidEnd,cSex,fcurvalue,WX_OpendId_XCX,
+                            cHome,cStoreNo,cStore,addressProvinceCity,bVipPrice)
+			 VALUES (#{vipMessage.cVipno},#{vipMessage.cVipName},#{vipMessage.cTel},
+			         #{vipMessage.dValidStart},#{vipMessage.dValidEnd},#{vipMessage.cSex},0,#{vipMessage.WX_OpendId_XCX},
+			         #{vipMessage.cHome},#{vipMessage.cStoreNo},#{vipMessage.cStoreName},#{vipMessage.addressProvinceCity},1)
+	    ]]>
+    </insert>
+
+    <update id="BindVip" parameterType="com.hlyfxcx.domin.VipMessage">
+        <![CDATA[
+            UPDATE t_vip
+            SET cVipName=#{vipMessage.cVipName},cTel=#{vipMessage.cTel},
+                cHome=#{vipMessage.cHome},addressProvinceCity=#{vipMessage.addressProvinceCity},
+                WX_OpendId_XCX=#{vipMessage.WX_OpendId_XCX}
+            WHERE cVipno=#{vipMessage.cVipno}
+        ]]>
+    </update>
+
+
+    <select id="getAllStore" resultType="com.hlyfxcx.domin.Store" >
+        <![CDATA[
+            SELECT DISTINCT cStoreNo,cStoreName,cStore=cStoreNo+'-'+cStoreName FROM t_Store
+        ]]>
+    </select>
+
+
+    <select id="getGoods" parameterType="com.hlyfxcx.domin.GoodWhere" resultType="com.hlyfxcx.domin.GoodInfo" statementType="STATEMENT">
+        SELECT  DISTINCT TOP ${goodWhere.iNumber} cGoodsNo,cGoodsName,cBarcode FROM t_cStoreGoods
+        WHERE cGoodsName like ${goodWhere.cGoodsName} OR cGoodsNo LIKE ${goodWhere.cGoodsNo}
+    </select>
+
+
+</mapper>

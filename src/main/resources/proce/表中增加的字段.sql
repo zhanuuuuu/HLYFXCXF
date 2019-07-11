@@ -1,0 +1,2 @@
+-- 小程序上面的微信 opendId
+ALTER TABLE T_VIP ADD WX_OpendId_XCX VARCHAR(80) NOT NULL DEFAULT ''
